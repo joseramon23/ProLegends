@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('leagues', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
+            $table->string('slug', 3)->uppercase();
             $table->string('region')->nullable();
-            $table->date('founded')->nullable();
-            $table->string('country')->nullable();
+            $table->year('founded')->nullable();
             $table->string('image')->default('default.jpg');
             $table->timestamps();
         });

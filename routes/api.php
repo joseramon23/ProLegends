@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PlayerController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::controller(PlayerController::class)->group(function() {
+    Route::get('players', 'index');
+    Route::post('players', 'store');
+    Route::put('player/{id}', 'update');
+    Route::delete('player/{id}', 'destroy');
 });
