@@ -16,6 +16,10 @@ class PlayerController extends Controller
         try {
             $players = Players::get();
 
+            foreach($players as $player) {
+                $player->actuallyTeam;
+            }
+
             if (!$players) {
                 return response()->json([
                     'success' => false,
@@ -88,9 +92,23 @@ class PlayerController extends Controller
      */
     public function show(string $id)
     {
-        $player = Players::findOrFail($id);
+        try {
+            $player = Players::findOrFail($id);
 
-        return $player;
+            if(!$player) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The player has been not found'
+                ], 404);
+            }
+
+            return $player;
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
