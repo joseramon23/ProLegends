@@ -10,7 +10,7 @@ class Players extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id', 'name', 'nickname', 'team_id', 'birthdate', 'country', 'image', 'rol'
+        'name', 'nickname', 'team_id', 'birthdate', 'country', 'image', 'rol'
     ];
 
     public function actuallyTeam() {

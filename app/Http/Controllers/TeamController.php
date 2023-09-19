@@ -41,36 +41,34 @@ class TeamController extends Controller
                 'name' => 'string|max:50',
                 'slug' => 'required|string|max:3',
                 'league_id' => 'required',
-                'founded' => 'required|year',
+                'founded' => 'required',
                 'country' => 'required|string|max:50',
-                'image' => 'string',
+                'image' => 'file',
             ]);
 
-            if($validation) {
+            if($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = Str::slug($request->slug)."_".($request->name).".".$image->guessExtension();
+                $route = public_path("images/teams/");
+                copy($image->getRealPath(), $route.$imageName);
 
-                if($request->hasFile('image')) {
-                    $image = $request->file('image');
-                    $imageName = Str::slug($request->id)."_".($request->name).".".$image->guessExtension();
-                    $route = public_path("images/players/");
-                    copy($image->getRealPath(), $route.$imageName);
+            } else $imageName = "default.jpg";
 
-                } else $imageName = "default.jpg";
+            $team = Teams::create([
+                'name' => $request->name,
+                'slug' => $request->slug,
+                'league_id' => $request->league_id,
+                'founded' => $request->founded,
+                'country' => $request->country,
+                'image' => $imageName
+            ]);
 
-                $team = Teams::create([
-                    'name' => $request->name,
-                    'slug' => $request->slug,
-                    'league_id' => $request->league_id,
-                    'founded' => $request->founded,
-                    'country' => $request->country,
-                    'image' => $imageName
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'The team has been added',
-                    'player' => $team
-                ], 200);
-            }
+            return response()->json([
+                'success' => true,
+                'message' => 'The team has been added',
+                'player' => $team
+            ], 200);
+            
         } catch(\Exception $error) {
             return response()->json([
                 'success' => false,
@@ -125,31 +123,32 @@ class TeamController extends Controller
                 'slug' => 'string|max:3',
                 'founded' => 'year',
                 'country' => 'string|max:50',
-                'image' => 'string',
+                'image' => 'file',
             ]);
 
             if($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = Str::slug($request->id)."_".($request->name).".".$image->guessExtension();
+                $imageName = Str::slug($request->slug)."_".($request->name).".".$image->guessExtension();
                 $route = public_path("images/teams/");
                 copy($image->getRealPath(), $route.$imageName);
 
             } else $imageName = $team->image;
 
-            if($validation) {
-                $team->name = $request->has('name') ? $request->get('name') : $team->name;
-                $team->slug = $request->has('slug') ? $request->get('slug') : $team->slug;
-                $team->league_id = $request->has('league_id') ? $request->get('league_id') : $team->team_id;
-                $team->founded = $request->has('founded') ? $request->get('founded') : $team->founded;
-                $team->country = $request->has('country') ? $request->get('country') : $team->country;
-                $team->image = $imageName;
-                $team->save();
-            }
+            $team->update([
+                'name' => $request->input('name', $team->name),
+                'slug' => $request->input('slug', $team->slug),
+                'league_id' => $request->input('league_id', $team->league_id),
+                'founded' => $request->input('founded', $team->founded),
+                'country' => $request->input('country', $team->country),
+                'image' => $imageName,
+            ]);
+
 
             return response()->json([
                 'success' => true,
-                'message' => 'Team updated successfully'
-            ]);
+                'message' => 'Team updated successfully',
+                'team' => $team->fresh()
+            ], 200);
 
         } catch (\Exception $error) {
             return response()->json([

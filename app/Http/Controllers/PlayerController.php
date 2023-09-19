@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Players;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PlayerController extends Controller
@@ -48,7 +49,7 @@ class PlayerController extends Controller
                 'birthdate' => 'required',
                 'team_id' => 'required',
                 'country' => 'required|string|max:50',
-                'image' => 'string',
+                'image' => 'file',
                 'rol' => 'required|max:10'
             ]);
 
@@ -56,7 +57,7 @@ class PlayerController extends Controller
 
                 if($request->hasFile('image')) {
                     $image = $request->file('image');
-                    $imageName = Str::slug($request->id)."_".($request->name).".".$image->guessExtension();
+                    $imageName = Str::slug($request->nickname)."_".($request->name).".".$image->guessExtension();
                     $route = public_path("images/players/");
                     copy($image->getRealPath(), $route.$imageName);
 
@@ -131,32 +132,38 @@ class PlayerController extends Controller
                 'name' => 'string|max:250',
                 'nickname' => 'string|max:50',
                 'country' => 'string|max:50',
-                'image' => 'string',
+                'image' => 'file',
                 'rol' => 'max:10'
             ]);
 
             if($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = Str::slug($request->id)."_".($request->name).".".$image->guessExtension();
+                $imageName = Str::slug($request->nickname)."_".($request->name).".".$image->guessExtension();
                 $route = public_path("images/players/");
-                copy($image->getRealPath(), $route.$imageName);
+
+                if (Storage::exists($route . $player->image)) {
+                    Storage::delete($route . $player->image);
+                }
+                
+                Storage::putFileAs($route, $image, $imageName);
 
             } else $imageName = $player->image;
 
-            if($validation) {
-                $player->name = $request->has('name') ? $request->get('name') : $player->name;
-                $player->nickname = $request->has('nickname') ? $request->get('nickname') : $player->nickname;
-                $player->team_id = $request->has('team_id') ? $request->get('team_id') : $player->team_id;
-                $player->birthdate = $request->has('birthdate') ? $request->get('birthdate') : $player->birthdate;
-                $player->country = $request->has('country') ? $request->get('country') : $player->country;
-                $player->image = $imageName;
-                $player->rol = $request->has('rol') ? $request->get('rol') : $player->rol;
-                $player->save();
-            }
+            $player->update([
+                'name' => $request->input('name', $player->name),
+                'nickname' => $request->input('nickname', $player->nickname),
+                'team_id' => $request->input('team_id', $player->team_id),
+                'birthdate' => $request->input('birthdate', $player->birthdate),
+                'country' => $request->input('country', $player->country),
+                'image' => $imageName,
+                'rol' => $request->input('rol', $player->rol)
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Player updated successfully'
+                'message' => 'Player updated successfully',
+                'player' => $player->fresh(),
+                'request' => $request
             ]);
 
         } catch (\Exception $error) {
@@ -196,3 +203,4 @@ class PlayerController extends Controller
         }
     }
 }
+

@@ -10,7 +10,7 @@ class Teams extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id', 'name', 'league_id', 'founded', 'country', 'image'
+        'id', 'name', 'slug', 'league_id', 'founded', 'country', 'image'
     ];
 
     public function league() {
