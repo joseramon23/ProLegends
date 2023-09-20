@@ -47,7 +47,7 @@ class PlayerController extends Controller
                 'name' => 'string|max:250',
                 'nickname' => 'required|string|max:50',
                 'birthdate' => 'required',
-                'team_id' => 'required',
+                'teams_id' => 'required',
                 'country' => 'required|string|max:50',
                 'image' => 'file',
                 'rol' => 'required|max:10'
@@ -57,7 +57,7 @@ class PlayerController extends Controller
 
                 if($request->hasFile('image')) {
                     $image = $request->file('image');
-                    $imageName = Str::slug($request->nickname)."_".($request->name).".".$image->guessExtension();
+                    $imageName = Str::slug($request->nickname).".".$image->guessExtension();
                     $route = public_path("images/players/");
                     copy($image->getRealPath(), $route.$imageName);
 
@@ -67,7 +67,7 @@ class PlayerController extends Controller
                     'name' => $request->name,
                     'nickname' => $request->nickname,
                     'birthdate' => $request->birthdate,
-                    'team_id' => $request->team_id,
+                    'teams_id' => $request->teams_id,
                     'country' => $request->country,
                     'image' => $imageName,
                     'rol' => $request->rol
@@ -138,7 +138,7 @@ class PlayerController extends Controller
 
             if($request->hasFile('image')) {
                 $image = $request->file('image');
-                $imageName = Str::slug($request->nickname)."_".($request->name).".".$image->guessExtension();
+                $imageName = Str::slug($request->nickname).".".$image->guessExtension();
                 $route = public_path("images/players/");
 
                 if (Storage::exists($route . $player->image)) {
@@ -152,7 +152,7 @@ class PlayerController extends Controller
             $player->update([
                 'name' => $request->input('name', $player->name),
                 'nickname' => $request->input('nickname', $player->nickname),
-                'team_id' => $request->input('team_id', $player->team_id),
+                'teams_id' => $request->input('teams_id', $player->teams_id),
                 'birthdate' => $request->input('birthdate', $player->birthdate),
                 'country' => $request->input('country', $player->country),
                 'image' => $imageName,

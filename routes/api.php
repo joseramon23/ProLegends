@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TeamController;
 use Illuminate\Http\Request;
@@ -30,4 +31,12 @@ Route::controller(TeamController::class)->group(function() {
     Route::post('team', 'store');
     Route::put('team/{id}', 'update');
     Route::delete('team/{id}', 'destroy');
+});
+
+Route::controller(LeagueController::class)->group(function() {
+    Route::get('leagues', 'index');
+    Route::get('league/{id}', 'show');
+    Route::post('league', 'store');
+    Route::put('league/{id}', 'update');
+    Route::delete('league/{id}', 'delete');
 });

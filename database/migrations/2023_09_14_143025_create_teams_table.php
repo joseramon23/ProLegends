@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->nullable();
             $table->string('slug', 3)->uppercase();
-            $table->foreignId('league_id')->constrained('leagues');
+            $table->foreignId('leagues_id')->constrained('leagues');
             $table->year('founded')->nullable();
             $table->string('country');
             $table->string('image')->default('default.jpg');

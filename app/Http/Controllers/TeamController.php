@@ -85,6 +85,8 @@ class TeamController extends Controller
     {
         try {
             $team = Teams::findOrFail($id);
+            $team->league;
+            $team->players;
 
             if(!$team) {
                 return response()->json([

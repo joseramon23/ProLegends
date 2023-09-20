@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('nickname')->nullable();
-            $table->foreignId('team_id')->constrained('teams');
+            $table->foreignId('teams_id')->constrained('teams');
             $table->date('birthdate');
             $table->string('country');
             $table->string('image')->default('default.jpg');
