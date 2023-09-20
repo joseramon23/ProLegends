@@ -10,11 +10,15 @@ class Teams extends Model
     use HasFactory;
 
     protected $fillable = [
-        'id', 'name', 'slug', 'league_id', 'founded', 'country', 'image'
+        'id', 'name', 'slug', 'leagues_id', 'founded', 'country', 'image'
     ];
 
     public function league() {
-        return $this->belongsTo(Leagues::class);
+        return $this->belongsTo(Leagues::class, 'leagues_id');
+    }
+
+    public function players() {
+        return $this->hasMany(Players::class);
     }
 
     public function latestTransfers() {

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Leagues;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class LeagueController extends Controller
 {
@@ -11,7 +14,21 @@ class LeagueController extends Controller
      */
     public function index()
     {
-        //
+        try {
+            $leagues = Leagues::get();
+
+            if (!$leagues) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Leagues not found'
+                ], 404);
+            } else return $leagues;
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -19,7 +36,44 @@ class LeagueController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $validation = $request->validate([
+                'name' => 'string|required|max:250',
+                'slug' => 'string|required|max:3',
+                'region' => 'string|required',
+                'founded' => 'required',
+                'image' => 'file'
+            ]);
+
+            if($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = Str::slug($request->slug)."_".($request->name).".".$image->guessExtension();
+                $route = public_path("images/leagues/");
+                copy($image->getRealPath(), $route.$imageName);
+
+            } else $imageName = "default.jpg";
+
+            $league = Leagues::create([
+                'name' => $request->name,
+                'slug' => $request->slug,
+                'region' => $request->region,
+                'founded' => $request->founded,
+                'image' => $imageName
+            ]);
+
+            return response()->json([
+                'succes' => true,
+                'message' => 'League has been added',
+                'league' => $league
+            ], 200);
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'error' => $error
+            ], 500);
+        }
     }
 
     /**
@@ -27,7 +81,24 @@ class LeagueController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $league = Leagues::findOrFail($id);
+            $league->teams;
+
+            if(!$league) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The league has been not found'
+                ], 404);
+            }
+
+            return $league;
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -35,7 +106,57 @@ class LeagueController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $league = Leagues::find($id);
+
+        if (!$league) {
+            return response()->json([
+                'success' => false,
+                'message' => "League not found"
+            ], 404);
+        }
+
+        try {
+            $validation = $request->validate([
+                'name' => 'string|max:250',
+                'slug' => 'string|max:3',
+                'region' => 'string',
+                'founded' => 'string',
+                'image' => 'file'
+            ]);
+
+            if($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = Str::slug($request->slug)."_".($request->name).".".$image->guessExtension();
+                $route = public_path("images/leagues/");
+
+                if (Storage::exists($route . $league->image)) {
+                    Storage::delete($route . $league->image);
+                }
+                
+                Storage::putFileAs($route, $image, $imageName);
+
+            } else $imageName = $league->image;
+
+            $league->update([
+                'name' => $request->input('name', $league->name),
+                'slug' => $request->input('slug', $league->slug),
+                'region' => $request->input('region', $league->region),
+                'founded' => $request->input('founded', $league->founded),
+                'image' => $imageName
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'League updated successfully',
+                'league' => $league->fresh()
+            ], 200);
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'error' => $error
+            ], 500);
+        }
     }
 
     /**
@@ -43,6 +164,26 @@ class LeagueController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $league = Leagues::destroy($id);
+ 
+            if (!$league) {
+                 return response()->json([
+                     'success' => false,
+                     'message' => 'Player not found'
+                 ], 404);
+            }
+            
+            return response()->json([
+                 'success' => true,
+                 'message' => 'Player has been deleted'
+            ]);
+         } catch (\Exception $error) {
+             return response()->json([
+                 'success' => false,
+                 'message' => $error->getMessage(),
+                 'error' => $error
+             ]);
+         }
     }
 }

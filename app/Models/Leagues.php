@@ -10,6 +10,11 @@ class Leagues extends Model
     use HasFactory;
 
     protected $fillable = [
-       'id', 'name', 'region', 'founded', 'country', 'image' 
+        'name', 'slug', 'region', 'founded', 'image' 
     ];
+
+    public function teams() {
+        return $this->hasMany(Teams::class, 'leagues_id');
+    }
+    
 }
