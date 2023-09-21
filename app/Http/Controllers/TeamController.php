@@ -21,7 +21,10 @@ class TeamController extends Controller
                     'success' => false,
                     'message' => 'Teams has been not found'
                 ], 404);
-            } else return $teams;
+            }
+            
+            return $teams;
+            
         } catch (\Exception $error) {
             return response()->json([
                 'succes' => false,

@@ -16,4 +16,8 @@ class Players extends Model
     public function transfer() {
         return $this->hasMany(Transfers::class, 'player_id');
     }
+
+    public function titles() {
+        return $this->hasMany(Players_titles::class);
+    }
 }

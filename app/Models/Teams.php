@@ -21,6 +21,10 @@ class Teams extends Model
         return $this->hasMany(Players::class);
     }
 
+    public function titles() {
+        return $this->hasMany(Players_titles::class, 'team_id');
+    }
+
     public function latestTransfers() {
         return $this->hasMany(Transfers::class, 'last_team_id');
     }

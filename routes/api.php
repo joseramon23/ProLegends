@@ -3,7 +3,9 @@
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TitlesController;
 use App\Http\Controllers\TransferController;
+use App\Models\Players_titles;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -48,4 +50,12 @@ Route::controller(TransferController::class)->group(function() {
     Route::post('transfers', 'store');
     Route::put('transfers/{id}', 'update');
     Route::delete('transfers/{id}', 'delete');
+});
+
+Route::controller(TitlesController::class)->group(function () {
+    Route::get('titles', 'index');
+    Route::get('titles/{id}', 'show');
+    Route::post('titles', 'store');
+    Route::put('titles/{id}', 'update');
+    Route::delete('titles/{id}', 'delete');
 });
