@@ -13,7 +13,7 @@ class Players extends Model
         'name', 'nickname', 'teams_id', 'birthdate', 'country', 'image', 'rol'
     ];
 
-    public function actuallyTeam() {
-        return $this->belongsTo(Teams::class, 'team_id');
+    public function transfer() {
+        return $this->hasMany(Transfers::class, 'player_id');
     }
 }

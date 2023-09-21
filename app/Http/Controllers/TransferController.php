@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Players;
+use App\Models\Teams;
+use App\Models\Transfers;
 use Illuminate\Http\Request;
 
 class TransferController extends Controller
@@ -11,7 +14,8 @@ class TransferController extends Controller
      */
     public function index()
     {
-        //
+        $transfers = Transfers::with('player:id,nickname', 'lastTeam:id,name', 'newTeam:id,name')->get();
+        return $transfers;
     }
 
     /**
@@ -19,7 +23,39 @@ class TransferController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try {
+            $validation = $request->validate([
+                'last_team_id' => 'required',
+                'new_team_id' => 'required',
+                'player_id' => 'required',
+                'start' => 'required|date',
+                'end' => 'required|date',
+                'description' => 'string|max:300'
+            ]);
+
+            $transfer = Transfers::create([
+                'last_team_id' => $request->last_team_id,
+                'new_team_id' => $request->new_team_id,
+                'player_id' => $request->player_id,
+                'start' => $request->start,
+                'end' => $request->end,
+                'description' => $request->description
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transfer has been added',
+                'transfer' => $transfer
+            ], 200);
+
+            
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'error' => $error
+            ], 500);
+        }
     }
 
     /**
@@ -27,7 +63,20 @@ class TransferController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $transfer = Transfers::findOrFail($id);
+        $player = Players::findOrFail($transfer->player_id)->nickname;
+        $last_team = Teams::findOrFail($transfer->last_team_id)->name;
+        $new_team = Teams::findOrFail($transfer->new_team_id)->name;
+
+        return response()->json([
+            'id' => $transfer->id,
+            'player' => $player,
+            'last_team' => $last_team,
+            'new_team' => $new_team,
+            'start' => $transfer->start,
+            'end' => $transfer->end,
+            'description' => $transfer->description
+        ]);
     }
 
     /**
@@ -35,7 +84,47 @@ class TransferController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        try {
+            $transfer = Transfers::find($id);
+
+            if(!$transfer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Transfer not found"
+                ], 404);
+            }
+
+            $validation = $request->validate([
+                'last_team_id' => 'number',
+                'new_team_id' => 'number',
+                'player_id' => 'number',
+                'start' => 'date',
+                'end' => 'date',
+                'description' => 'string|max:300'
+            ]);
+
+            $transfer->update([
+                'last_team_id' => $request->input('last_team_id', $transfer->last_team_id),
+                'new_team_id' => $request->input('new_team_id', $transfer->new_team_id),
+                'player_id' => $request->input('player_id', $transfer->player_id),
+                'start' => $request->input('start', $transfer->start),
+                'end' => $request->input('end', $transfer->end),
+                'description' => $request->input('description', $request->description)
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transfer updated successfully',
+                'transfer' => $transfer->fresh()
+            ]);
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'error' => $error
+            ], 500);
+        }
     }
 
     /**
@@ -43,6 +132,29 @@ class TransferController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            $transfer = Transfers::destroy($id);
+
+            if(!$transfer) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transfer not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Team has been deleted'
+           ]);
+
+        } catch (\Exception $error) {
+            return response()->json([
+                'success' => false,
+                'message' => $error->getMessage(),
+                'error' => $error
+            ]);
+         }
+
+
     }
 }

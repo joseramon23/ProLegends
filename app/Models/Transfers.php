@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Seassons extends Model
+class Transfers extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'id', 'last_team_id', 'new_team_id', 'player_id', 'year'
+        'last_team_id', 'new_team_id', 'player_id', 'start', 'end', 'description'
     ];
 
     public function player() {

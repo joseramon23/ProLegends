@@ -3,6 +3,7 @@
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TransferController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -39,4 +40,12 @@ Route::controller(LeagueController::class)->group(function() {
     Route::post('league', 'store');
     Route::put('league/{id}', 'update');
     Route::delete('league/{id}', 'delete');
+});
+
+Route::controller(TransferController::class)->group(function() {
+    Route::get('transfers', 'index');
+    Route::get('transfers/{id}', 'show');
+    Route::post('transfers', 'store');
+    Route::put('transfers/{id}', 'update');
+    Route::delete('transfers/{id}', 'delete');
 });

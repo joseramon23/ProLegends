@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('last_team_id')->constrained('teams');
             $table->foreignId('new_team_id')->constrained('teams');
             $table->foreignId('player_id')->constrained('players');
-            $table->year('year');
+            $table->string('start');
+            $table->string('end');
+            $table->string('description');
             $table->timestamps();
         });
     }
