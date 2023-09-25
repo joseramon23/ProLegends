@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Players_titles;
+
+use App\Exceptions\ApiException;
+
 use Illuminate\Http\Request;
 
 class TitlesController extends Controller
@@ -16,19 +19,13 @@ class TitlesController extends Controller
             $titles = Players_titles::get();
 
             if(!$titles) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Titles has been not found'
-                ], 404);
+                throw new ApiException("Titles not found", 404);
             }
 
             return $titles;
 
         } catch (\Exception $error) {
-            return response()->json([
-                'succes' => false,
-                'message' => $error->getMessage()
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -61,10 +58,7 @@ class TitlesController extends Controller
             ], 200);
 
         } catch (\Exception $error) {
-            return response()->json([
-                'succes' => false,
-                'message' => $error->getMessage()
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -85,10 +79,7 @@ class TitlesController extends Controller
 
             return $title;
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -100,10 +91,7 @@ class TitlesController extends Controller
         $title = Players_titles::find($id);
         
         if (!$title) {
-            return response()->json([
-                'success' => false,
-                'message' => "Title not found"
-            ], 404);
+            throw new ApiException("Title not found", 404);
         }
 
         try {
@@ -130,11 +118,7 @@ class TitlesController extends Controller
             ], 200);
 
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ]);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -147,10 +131,7 @@ class TitlesController extends Controller
             $title = Players_titles::destroy($id);
  
             if (!$title) {
-                 return response()->json([
-                     'success' => false,
-                     'message' => 'Title not found'
-                 ], 404);
+                throw new ApiException("Title not found", 404);
             }
             
             return response()->json([
@@ -158,11 +139,7 @@ class TitlesController extends Controller
                  'message' => 'Title has been deleted'
             ]);
          } catch (\Exception $error) {
-             return response()->json([
-                 'success' => false,
-                 'message' => $error->getMessage(),
-                 'error' => $error
-             ]);
+            throw new ApiException($error->getMessage(), 500);
          }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Models\Players;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,24 +16,15 @@ class PlayerController extends Controller
     public function index()
     {
         try {
-            $players = Players::get();
+            $players = Players::with('actuallyTeam')->get();
 
-            foreach($players as $player) {
-                $player->actuallyTeam;
-            }
+            if ($players->isEmpty()) {
+                throw new ApiException("Players not found", 404);
+            } 
+            return $players;
 
-            if (!$players) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Players not found'
-                ], 404);
-            } else return $players;
-
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -53,38 +45,32 @@ class PlayerController extends Controller
                 'rol' => 'required|max:10'
             ]);
 
-            if($validation) {
+            if($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = Str::slug($request->nickname).".".$image->guessExtension();
+                $route = public_path("images/players/");
+                copy($image->getRealPath(), $route.$imageName);
 
-                if($request->hasFile('image')) {
-                    $image = $request->file('image');
-                    $imageName = Str::slug($request->nickname).".".$image->guessExtension();
-                    $route = public_path("images/players/");
-                    copy($image->getRealPath(), $route.$imageName);
+            } else $imageName = "default.jpg";
 
-                } else $imageName = "default.jpg";
+            $player = Players::create([
+                'name' => $request->name,
+                'nickname' => $request->nickname,
+                'birthdate' => $request->birthdate,
+                'teams_id' => $request->teams_id,
+                'country' => $request->country,
+                'image' => $imageName,
+                'rol' => $request->rol
+            ]);
 
-                $player = Players::create([
-                    'name' => $request->name,
-                    'nickname' => $request->nickname,
-                    'birthdate' => $request->birthdate,
-                    'teams_id' => $request->teams_id,
-                    'country' => $request->country,
-                    'image' => $imageName,
-                    'rol' => $request->rol
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'The player has been added',
-                    'player' => $player
-                ], 200);
-            }
-        } catch(\Exception $error) {
             return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+                'success' => true,
+                'message' => 'The player has been added',
+                'player' => $player
+            ], 200);
+            
+        } catch(\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -97,18 +83,12 @@ class PlayerController extends Controller
             $player = Players::findOrFail($id);
 
             if(!$player) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The player has been not found'
-                ], 404);
+                throw new ApiException("Player not found", 404);
             }
-
             return $player;
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -120,10 +100,7 @@ class PlayerController extends Controller
         $player = Players::find($id);
 
         if (!$player) {
-            return response()->json([
-                'success' => false,
-                'message' => "Player not found"
-            ], 404);
+            throw new ApiException("Player not found", 404);
         }
 
         try {
@@ -164,14 +141,10 @@ class PlayerController extends Controller
                 'message' => 'Player updated successfully',
                 'player' => $player->fresh(),
                 'request' => $request
-            ]);
+            ], 200);
 
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -184,22 +157,15 @@ class PlayerController extends Controller
            $player = Players::destroy($id);
 
            if (!$player) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Player not found'
-                ], 404);
+                throw new ApiException("Player not found", 404);
            }
            
            return response()->json([
                 'success' => true,
                 'message' => 'Player has been deleted'
            ]);
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ]);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 }

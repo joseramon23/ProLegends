@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
+
 use App\Models\Teams;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -15,21 +18,13 @@ class TeamController extends Controller
     {
         try {
             $teams = Teams::get();
-
             if(!$teams) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Teams has been not found'
-                ], 404);
+                throw new ApiException("Teams not found", 404);
             }
-            
             return $teams;
             
-        } catch (\Exception $error) {
-            return response()->json([
-                'succes' => false,
-                'message' => $error->getMessage()
-            ], 500);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -72,12 +67,8 @@ class TeamController extends Controller
                 'player' => $team
             ], 200);
             
-        } catch(\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+        } catch(\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -92,18 +83,12 @@ class TeamController extends Controller
             $team->players;
 
             if(!$team) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The team has been not found'
-                ], 404);
+                throw new ApiException("Team not found", 404);
             }
-
             return $team;
+
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -115,10 +100,7 @@ class TeamController extends Controller
         $team = Teams::find($id);
 
         if (!$team) {
-            return response()->json([
-                'success' => false,
-                'message' => "Team not found"
-            ], 404);
+            throw new ApiException("Team not found", 404);
         }
 
         try {
@@ -156,11 +138,7 @@ class TeamController extends Controller
             ], 200);
 
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -173,22 +151,15 @@ class TeamController extends Controller
             $team = Teams::destroy($id);
  
             if (!$team) {
-                 return response()->json([
-                     'success' => false,
-                     'message' => 'Team not found'
-                 ], 404);
+                throw new ApiException("Team not found", 404);
             }
             
             return response()->json([
                  'success' => true,
                  'message' => 'Team has been deleted'
             ]);
-         } catch (\Exception $error) {
-             return response()->json([
-                 'success' => false,
-                 'message' => $error->getMessage(),
-                 'error' => $error
-             ]);
-         }
+        } catch (\Exception $error) {
+            throw new ApiException($error->getMessage(), 500);
+        }
     }
 }

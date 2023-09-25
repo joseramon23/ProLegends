@@ -6,6 +6,7 @@ use App\Models\Players;
 use App\Models\Teams;
 use App\Models\Transfers;
 use Illuminate\Http\Request;
+use App\Exceptions\ApiException;
 
 class TransferController extends Controller
 {
@@ -14,8 +15,14 @@ class TransferController extends Controller
      */
     public function index()
     {
-        $transfers = Transfers::with('player:id,nickname', 'lastTeam:id,name', 'newTeam:id,name')->get();
-        return $transfers;
+        try {
+            $transfers = Transfers::with('player:id,nickname', 'lastTeam:id,name', 'newTeam:id,name')->get();
+            if(!$transfers) {
+                throw new ApiException("Transfers not found", 404);
+            }
+        } catch (\Exception $error) {
+            throw new ApiException($error->getMessage(), 500);
+        }
     }
 
     /**
@@ -24,7 +31,7 @@ class TransferController extends Controller
     public function store(Request $request)
     {
         try {
-            $validation = $request->validate([
+            $request->validate([
                 'last_team_id' => 'required',
                 'new_team_id' => 'required',
                 'player_id' => 'required',
@@ -50,11 +57,7 @@ class TransferController extends Controller
 
             
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -63,20 +66,28 @@ class TransferController extends Controller
      */
     public function show(string $id)
     {
-        $transfer = Transfers::findOrFail($id);
-        $player = Players::findOrFail($transfer->player_id)->nickname;
-        $last_team = Teams::findOrFail($transfer->last_team_id)->name;
-        $new_team = Teams::findOrFail($transfer->new_team_id)->name;
+        try {
+            $transfer = Transfers::findOrFail($id);
+            if(!$transfer) {
+                throw new ApiException("Transfer not found", 404);
+            }
+            $player = Players::findOrFail($transfer->player_id)->nickname;
+            $last_team = Teams::findOrFail($transfer->last_team_id)->name;
+            $new_team = Teams::findOrFail($transfer->new_team_id)->name;
 
-        return response()->json([
-            'id' => $transfer->id,
-            'player' => $player,
-            'last_team' => $last_team,
-            'new_team' => $new_team,
-            'start' => $transfer->start,
-            'end' => $transfer->end,
-            'description' => $transfer->description
-        ]);
+            return response()->json([
+                'id' => $transfer->id,
+                'player' => $player,
+                'last_team' => $last_team,
+                'new_team' => $new_team,
+                'start' => $transfer->start,
+                'end' => $transfer->end,
+                'description' => $transfer->description
+            ]);
+
+        } catch (\Exception $error) {
+            throw new ApiException($error->getMessage(), 500);
+        }
     }
 
     /**
@@ -94,7 +105,7 @@ class TransferController extends Controller
                 ], 404);
             }
 
-            $validation = $request->validate([
+            $request->validate([
                 'last_team_id' => 'number',
                 'new_team_id' => 'number',
                 'player_id' => 'number',
@@ -119,11 +130,7 @@ class TransferController extends Controller
             ]);
 
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+            throw new ApiException($error->getMessage(), 500);
         }
     }
 
@@ -136,10 +143,7 @@ class TransferController extends Controller
             $transfer = Transfers::destroy($id);
 
             if(!$transfer) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Transfer not found'
-                ], 404);
+                throw new ApiException("Transfer not found", 404);
             }
 
             return response()->json([
@@ -148,13 +152,7 @@ class TransferController extends Controller
            ]);
 
         } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ]);
-         }
-
-
+            throw new ApiException($error->getMessage(), 500);
+        }
     }
 }

@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
+
 use App\Models\Leagues;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -16,18 +19,13 @@ class LeagueController extends Controller
     {
         try {
             $leagues = Leagues::get();
-
             if (!$leagues) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Leagues not found'
-                ], 404);
-            } else return $leagues;
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+                throw new ApiException("League not found", 404);
+            }
+            return $leagues;
+
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -39,7 +37,7 @@ class LeagueController extends Controller
         try {
             $validation = $request->validate([
                 'name' => 'string|required|max:250',
-                'slug' => 'string|required|max:3',
+                'slug' => 'string|required|max:5',
                 'region' => 'string|required',
                 'founded' => 'required',
                 'image' => 'file'
@@ -67,12 +65,8 @@ class LeagueController extends Controller
                 'league' => $league
             ], 200);
 
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -85,19 +79,13 @@ class LeagueController extends Controller
             $league = Leagues::findOrFail($id);
             $league->teams;
 
-            if(!$league) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The league has been not found'
-                ], 404);
+            if($league->isEmpty()) {
+                throw new ApiException("League not found", 404);
             }
-
             return $league;
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage()
-            ], 500);
+
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -108,17 +96,14 @@ class LeagueController extends Controller
     {
         $league = Leagues::find($id);
 
-        if (!$league) {
-            return response()->json([
-                'success' => false,
-                'message' => "League not found"
-            ], 404);
+        if($league->isEmpty()) {
+            throw new ApiException("League not found", 404);
         }
 
         try {
             $validation = $request->validate([
                 'name' => 'string|max:250',
-                'slug' => 'string|max:3',
+                'slug' => 'string|max:5',
                 'region' => 'string',
                 'founded' => 'string',
                 'image' => 'file'
@@ -150,12 +135,8 @@ class LeagueController extends Controller
                 'message' => 'League updated successfully',
                 'league' => $league->fresh()
             ], 200);
-        } catch (\Exception $error) {
-            return response()->json([
-                'success' => false,
-                'message' => $error->getMessage(),
-                'error' => $error
-            ], 500);
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
         }
     }
 
@@ -168,22 +149,15 @@ class LeagueController extends Controller
             $league = Leagues::destroy($id);
  
             if (!$league) {
-                 return response()->json([
-                     'success' => false,
-                     'message' => 'Player not found'
-                 ], 404);
+                throw new ApiException("League not found", 404);
             }
             
             return response()->json([
                  'success' => true,
                  'message' => 'Player has been deleted'
             ]);
-         } catch (\Exception $error) {
-             return response()->json([
-                 'success' => false,
-                 'message' => $error->getMessage(),
-                 'error' => $error
-             ]);
-         }
+        } catch (\Exception $e) {
+            throw new ApiException($e->getMessage(), 500);
+        }
     }
 }
