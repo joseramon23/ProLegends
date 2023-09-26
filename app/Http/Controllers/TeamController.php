@@ -17,7 +17,10 @@ class TeamController extends Controller
     public function index()
     {
         try {
-            $teams = Teams::get();
+            $teams = Teams::with(
+                'players:id,name,nickname,teams_id',
+                'league:id,name,slug'
+            )->get();
             if(!$teams) {
                 throw new ApiException("Teams not found", 404);
             }
@@ -35,10 +38,10 @@ class TeamController extends Controller
     {
         try {
 
-            $validation = $request->validate([
+            $request->validate([
                 'name' => 'string|max:50',
                 'slug' => 'required|string|max:3',
-                'league_id' => 'required',
+                'leagues_id' => 'required',
                 'founded' => 'required',
                 'country' => 'required|string|max:50',
                 'image' => 'file',
@@ -55,7 +58,7 @@ class TeamController extends Controller
             $team = Teams::create([
                 'name' => $request->name,
                 'slug' => $request->slug,
-                'league_id' => $request->league_id,
+                'leagues_id' => $request->leagues_id,
                 'founded' => $request->founded,
                 'country' => $request->country,
                 'image' => $imageName
@@ -64,7 +67,7 @@ class TeamController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'The team has been added',
-                'player' => $team
+                'team' => $team
             ], 200);
             
         } catch(\Exception $e) {
@@ -78,9 +81,10 @@ class TeamController extends Controller
     public function show(string $id)
     {
         try {
-            $team = Teams::findOrFail($id);
-            $team->league;
-            $team->players;
+            $team = Teams::with(
+                'league:id,name,slug',
+                'players'
+            )->findOrFail($id);
 
             if(!$team) {
                 throw new ApiException("Team not found", 404);
@@ -108,7 +112,8 @@ class TeamController extends Controller
             $validation = $request->validate([
                 'name' => 'string|max:50',
                 'slug' => 'string|max:3',
-                'founded' => 'year',
+                'leagues_id' => 'integer',
+                'founded' => 'integer',
                 'country' => 'string|max:50',
                 'image' => 'file',
             ]);
@@ -124,7 +129,7 @@ class TeamController extends Controller
             $team->update([
                 'name' => $request->input('name', $team->name),
                 'slug' => $request->input('slug', $team->slug),
-                'league_id' => $request->input('league_id', $team->league_id),
+                'leagues_id' => $request->input('leagues_id', $team->leagues_id),
                 'founded' => $request->input('founded', $team->founded),
                 'country' => $request->input('country', $team->country),
                 'image' => $imageName,

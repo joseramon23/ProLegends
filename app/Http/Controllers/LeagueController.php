@@ -60,7 +60,7 @@ class LeagueController extends Controller
             ]);
 
             return response()->json([
-                'succes' => true,
+                'success' => true,
                 'message' => 'League has been added',
                 'league' => $league
             ], 200);
@@ -79,7 +79,7 @@ class LeagueController extends Controller
             $league = Leagues::findOrFail($id);
             $league->teams;
 
-            if($league->isEmpty()) {
+            if(!$league) {
                 throw new ApiException("League not found", 404);
             }
             return $league;
@@ -96,12 +96,12 @@ class LeagueController extends Controller
     {
         $league = Leagues::find($id);
 
-        if($league->isEmpty()) {
+        if(!$league) {
             throw new ApiException("League not found", 404);
         }
 
         try {
-            $validation = $request->validate([
+            $request->validate([
                 'name' => 'string|max:250',
                 'slug' => 'string|max:5',
                 'region' => 'string',
@@ -154,7 +154,8 @@ class LeagueController extends Controller
             
             return response()->json([
                  'success' => true,
-                 'message' => 'Player has been deleted'
+                 'message' => 'League has been deleted',
+                 'league' => $id
             ]);
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);

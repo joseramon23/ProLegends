@@ -16,9 +16,9 @@ class PlayerController extends Controller
     public function index()
     {
         try {
-            $players = Players::with('actuallyTeam')->get();
+            $players = Players::get();
 
-            if ($players->isEmpty()) {
+            if (!$players) {
                 throw new ApiException("Players not found", 404);
             } 
             return $players;
@@ -105,7 +105,7 @@ class PlayerController extends Controller
 
         try {
 
-            $validation = $request->validate([
+            $request->validate([
                 'name' => 'string|max:250',
                 'nickname' => 'string|max:50',
                 'country' => 'string|max:50',

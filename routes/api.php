@@ -5,8 +5,6 @@ use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TitlesController;
 use App\Http\Controllers\TransferController;
-use App\Models\Players_titles;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*

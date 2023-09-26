@@ -13,6 +13,10 @@ class Players extends Model
         'name', 'nickname', 'teams_id', 'birthdate', 'country', 'image', 'rol'
     ];
 
+    public function team() {
+        return $this->belongsTo(Teams::class, 'teams_id');
+    }
+
     public function transfer() {
         return $this->hasMany(Transfers::class, 'player_id');
     }
