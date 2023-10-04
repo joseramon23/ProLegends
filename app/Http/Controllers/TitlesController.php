@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Players_titles;
+use App\Models\Players;
 
 use App\Exceptions\ApiException;
 
@@ -16,11 +17,28 @@ class TitlesController extends Controller
     public function index()
     {
         try {
-            $titles = Players_titles::get();
+            $titles = Players_titles::with(
+                'player:id,name,nickname',
+                'league:id,name',
+                'team:id,name'
+            )->get();
 
             if(!$titles) {
                 throw new ApiException("Titles not found", 404);
             }
+
+            $titles = $titles->map(function ($title) {
+                return [
+                    'id' => $title->id,
+                    'name' => $title->name,
+                    'player' => $title->player,
+                    'team' => $title->team,
+                    'league' => $title->league->name,
+                    'date' => $title->date,
+                    'created_at' => $title->created_at,
+                    'updated_at' => $title->updated_at
+                ];
+            });
 
             return $titles;
 
@@ -37,25 +55,72 @@ class TitlesController extends Controller
         try {
             $request->validate([
                 'name' => 'required|string|max:150',
-                'player_id' => 'required',
-                'team_id' => 'required',
+                'player_id' => 'integer',
+                'team_id' => 'integer',
                 'league_id' => 'required',
-                'date' => 'required|max:8'
+                'date' => 'required|max:11'
             ]);
 
-            $title = Players_titles::create([
-                'name' => $request->name,
-                'player_id' => $request->player_id,
-                'team_id' => $request->team_id,
-                'league_id' => $request->league_id,
-                'date' => $request->date
-            ]);
+            /**
+            * Request has player_id and team_id, create a title for that player and team
+            */
+            if($request->player_id && $request->team_id) {
+                $title = Players_titles::create([
+                    'name' => $request->name,
+                    'player_id' => $request->player_id,
+                    'team_id' => $request->team_id,
+                    'league_id' => $request->league_id,
+                    'date' => $request->date
+                ]);
+    
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Title created successfully',
+                ], 200);
+            }
+            
+            /**
+             * Request only has player_id, create a title for that player
+             */
+            if ($request->player_id) {
+                $player = Players::findOrFail($request->player_id);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'The title has been added',
-                'player' => $title
-            ], 200);
+                $title = Players_titles::create([
+                    'name' => $request->name,
+                    'player_id' => $request->player_id,
+                    'team_id' => $player->teams_id,
+                    'league_id' => $request->league_id,
+                    'date' => $request->date
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Title created successfully',
+                    'title' => $title
+                ], 200);
+            }
+
+            /**
+             * Request has team_id, create a title for all players of that team
+             */
+            if ($request->team_id) {
+                $players = Players::where('teams_id', $request->team_id)->get();
+
+                foreach ($players as $player) {
+                    $title = Players_titles::create([
+                        'name' => $request->name,
+                        'player_id' => $player->id,
+                        'team_id' => $request->team_id,
+                        'league_id' => $request->league_id,
+                        'date' => $request->date
+                    ]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'The title has been added to all players of the team',
+                ], 200);
+            }
 
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
@@ -68,7 +133,11 @@ class TitlesController extends Controller
     public function show(string $id)
     {
         try {
-            $title = Players_titles::findOrFail($id);
+            $title = Players_titles::with(
+                'player:id,name,nickname',
+                'league:id,name',
+                'team:id,name'
+            )->findOrFail($id);
 
             if (!$title) {
                 return response()->json([
@@ -77,7 +146,17 @@ class TitlesController extends Controller
                 ], 404);
             }
 
-            return $title;
+            return response()->json([
+                'id' => $title->id,
+                'name' => $title->name,
+                'player' => $title->player,
+                'team' => $title->team,
+                'league' => $title->league->name,
+                'date' => $title->date,
+                'created_at' => $title->created_at,
+                'updated_at' => $title->updated_at
+            ]);
+            
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
         }
@@ -100,7 +179,7 @@ class TitlesController extends Controller
                 'player_id' => 'integer',
                 'team_id' => 'integer',
                 'league_id' => 'integer',
-                'date' => 'max:8'
+                'date' => 'max:11'
             ]);
 
             $title->update([

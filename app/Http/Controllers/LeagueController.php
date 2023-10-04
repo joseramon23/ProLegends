@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
-
+use App\Http\Resources\LeaguesResource;
 use App\Models\Leagues;
 
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class LeagueController extends Controller
             if (!$leagues) {
                 throw new ApiException("League not found", 404);
             }
-            return $leagues;
+            return LeaguesResource::collection($leagues);
 
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);
@@ -35,7 +35,7 @@ class LeagueController extends Controller
     public function store(Request $request)
     {
         try {
-            $validation = $request->validate([
+            $request->validate([
                 'name' => 'string|required|max:250',
                 'slug' => 'string|required|max:5',
                 'region' => 'string|required',
@@ -77,12 +77,11 @@ class LeagueController extends Controller
     {
         try {
             $league = Leagues::findOrFail($id);
-            $league->teams;
 
             if(!$league) {
                 throw new ApiException("League not found", 404);
             }
-            return $league;
+            return LeaguesResource::make($league)->teams();
 
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);
@@ -155,7 +154,6 @@ class LeagueController extends Controller
             return response()->json([
                  'success' => true,
                  'message' => 'League has been deleted',
-                 'league' => $id
             ]);
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);

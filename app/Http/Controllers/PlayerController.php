@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
+use App\Http\Resources\PlayersResource;
 use App\Models\Players;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -21,7 +22,7 @@ class PlayerController extends Controller
             if (!$players) {
                 throw new ApiException("Players not found", 404);
             } 
-            return $players;
+            return PlayersResource::collection($players);
 
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);
@@ -34,8 +35,7 @@ class PlayerController extends Controller
     public function store(Request $request)
     {
         try {
-
-            $validation = $request->validate([
+            $request->validate([
                 'name' => 'string|max:250',
                 'nickname' => 'required|string|max:50',
                 'birthdate' => 'required',
@@ -85,7 +85,7 @@ class PlayerController extends Controller
             if(!$player) {
                 throw new ApiException("Player not found", 404);
             }
-            return $player;
+            return PlayersResource::make($player)->allPlayer();
 
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);
@@ -104,7 +104,6 @@ class PlayerController extends Controller
         }
 
         try {
-
             $request->validate([
                 'name' => 'string|max:250',
                 'nickname' => 'string|max:50',

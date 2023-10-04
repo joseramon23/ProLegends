@@ -14,10 +14,14 @@ class Players_titles extends Model
     ];
 
     public function player() {
-        return $this->belongsTo(Players::class);
+        return $this->belongsTo(Players::class, 'player_id');
     }
 
     public function team() {
-        return $this->belongsTo(Teams::class);
+        return $this->belongsTo(Teams::class, 'team_id');
+    }
+
+    public function league() {
+        return $this->belongsTo(Leagues::class, 'league_id');
     }
 }

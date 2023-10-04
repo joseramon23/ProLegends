@@ -16,10 +16,24 @@ class TransferController extends Controller
     public function index()
     {
         try {
-            $transfers = Transfers::with('player:id,nickname', 'lastTeam:id,name', 'newTeam:id,name')->get();
+            $transfers = Transfers::with('player:id,nickname,name', 'lastTeam:id,name', 'newTeam:id,name')->get();
             if(!$transfers) {
                 throw new ApiException("Transfers not found", 404);
             }
+
+            $transfers = $transfers->map(function ($transfer) {
+                return [
+                    'id' => $transfer->id,
+                    'player' => $transfer->player->name . " " . $transfer->player->nickname,
+                    'last_team' => $transfer->lastTeam->name,
+                    'new_team' => $transfer->newTeam->name,
+                    'start' => $transfer->start,
+                    'end' => $transfer->end,
+                    'description' => $transfer->description
+                ];
+            });
+            return $transfers;
+
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
         }
@@ -49,10 +63,16 @@ class TransferController extends Controller
                 'description' => $request->description
             ]);
 
+            $player = Players::findOrFail($request->player_id);
+            $player->update([
+                'teams_id' => $request->new_team_id
+            ]);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Transfer has been added',
-                'transfer' => $transfer
+                'transfer' => $transfer,
+                'player' => $player
             ], 200);
 
             

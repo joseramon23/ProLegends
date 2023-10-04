@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
-
+use App\Http\Resources\TeamsResource;
 use App\Models\Teams;
 
 use Illuminate\Http\Request;
@@ -17,14 +17,11 @@ class TeamController extends Controller
     public function index()
     {
         try {
-            $teams = Teams::with(
-                'players:id,name,nickname,teams_id',
-                'league:id,name,slug'
-            )->get();
+            $teams = Teams::get();
             if(!$teams) {
                 throw new ApiException("Teams not found", 404);
             }
-            return $teams;
+            return TeamsResource::collection($teams);
             
         } catch (\Exception $e) {
             throw new ApiException($e->getMessage(), 500);
@@ -37,7 +34,6 @@ class TeamController extends Controller
     public function store(Request $request)
     {
         try {
-
             $request->validate([
                 'name' => 'string|max:50',
                 'slug' => 'required|string|max:3',
@@ -81,15 +77,12 @@ class TeamController extends Controller
     public function show(string $id)
     {
         try {
-            $team = Teams::with(
-                'league:id,name,slug',
-                'players'
-            )->findOrFail($id);
+            $team = Teams::findOrFail($id);
 
             if(!$team) {
                 throw new ApiException("Team not found", 404);
             }
-            return $team;
+            return TeamsResource::make($team)->allTeam();
 
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
