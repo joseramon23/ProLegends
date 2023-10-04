@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Players;
 use App\Models\Teams;
 use App\Models\Transfers;
+use App\Http\Resources\TransfersResource;
 use Illuminate\Http\Request;
 use App\Exceptions\ApiException;
 
@@ -16,23 +17,13 @@ class TransferController extends Controller
     public function index()
     {
         try {
-            $transfers = Transfers::with('player:id,nickname,name', 'lastTeam:id,name', 'newTeam:id,name')->get();
+            $transfers = Transfers::get();
+
             if(!$transfers) {
                 throw new ApiException("Transfers not found", 404);
             }
 
-            $transfers = $transfers->map(function ($transfer) {
-                return [
-                    'id' => $transfer->id,
-                    'player' => $transfer->player->name . " " . $transfer->player->nickname,
-                    'last_team' => $transfer->lastTeam->name,
-                    'new_team' => $transfer->newTeam->name,
-                    'start' => $transfer->start,
-                    'end' => $transfer->end,
-                    'description' => $transfer->description
-                ];
-            });
-            return $transfers;
+            return TransfersResource::collection($transfers);
 
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
@@ -91,19 +82,8 @@ class TransferController extends Controller
             if(!$transfer) {
                 throw new ApiException("Transfer not found", 404);
             }
-            $player = Players::findOrFail($transfer->player_id)->nickname;
-            $last_team = Teams::findOrFail($transfer->last_team_id)->name;
-            $new_team = Teams::findOrFail($transfer->new_team_id)->name;
-
-            return response()->json([
-                'id' => $transfer->id,
-                'player' => $player,
-                'last_team' => $last_team,
-                'new_team' => $new_team,
-                'start' => $transfer->start,
-                'end' => $transfer->end,
-                'description' => $transfer->description
-            ]);
+            
+            return new TransfersResource($transfer);
 
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Players_titles;
 use App\Models\Players;
-
+use App\Http\Resources\TitlesResource;
 use App\Exceptions\ApiException;
 
 use Illuminate\Http\Request;
@@ -17,30 +17,13 @@ class TitlesController extends Controller
     public function index()
     {
         try {
-            $titles = Players_titles::with(
-                'player:id,name,nickname',
-                'league:id,name',
-                'team:id,name'
-            )->get();
+            $titles = Players_titles::get();
 
             if(!$titles) {
                 throw new ApiException("Titles not found", 404);
             }
 
-            $titles = $titles->map(function ($title) {
-                return [
-                    'id' => $title->id,
-                    'name' => $title->name,
-                    'player' => $title->player,
-                    'team' => $title->team,
-                    'league' => $title->league->name,
-                    'date' => $title->date,
-                    'created_at' => $title->created_at,
-                    'updated_at' => $title->updated_at
-                ];
-            });
-
-            return $titles;
+            return TitlesResource::collection($titles);
 
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
@@ -133,11 +116,7 @@ class TitlesController extends Controller
     public function show(string $id)
     {
         try {
-            $title = Players_titles::with(
-                'player:id,name,nickname',
-                'league:id,name',
-                'team:id,name'
-            )->findOrFail($id);
+            $title = Players_titles::findOrFail($id);
 
             if (!$title) {
                 return response()->json([
@@ -146,16 +125,7 @@ class TitlesController extends Controller
                 ], 404);
             }
 
-            return response()->json([
-                'id' => $title->id,
-                'name' => $title->name,
-                'player' => $title->player,
-                'team' => $title->team,
-                'league' => $title->league->name,
-                'date' => $title->date,
-                'created_at' => $title->created_at,
-                'updated_at' => $title->updated_at
-            ]);
+            return new TitlesResource($title);
             
         } catch (\Exception $error) {
             throw new ApiException($error->getMessage(), 500);
